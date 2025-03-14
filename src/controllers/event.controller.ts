@@ -1,4 +1,3 @@
-// src/controllers/event.controller.ts
 import { Request, Response } from 'express'
 import { Recurrence, SharePermission } from '@prisma/client'
 import { validate } from 'class-validator'
@@ -7,11 +6,6 @@ import { EventDto } from '../dto/event.dto'
 import { ShareItemDto } from '../dto/share.dto'
 import { AuthRequest } from '../middlewares/auth.middleware'
 
-/**
- * Verifica si un usuario puede editar un evento:
- * - Es propietario del evento
- * - O está compartido con permiso EDIT
- */
 async function canEditEvent(userId: number, eventId: number): Promise<boolean> {
   const event = await prisma.event.findUnique({ where: { id: eventId } })
   if (!event) return false
@@ -23,9 +17,6 @@ async function canEditEvent(userId: number, eventId: number): Promise<boolean> {
   return !!share
 }
 
-/**
- * Crea un evento nuevo
- */
 export const createEvent = async (req: AuthRequest, res: Response) => {
   const eventData = new EventDto()
   Object.assign(eventData, req.body)
@@ -53,9 +44,6 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
   return res.status(201).json(event)
 }
 
-/**
- * Obtiene la lista de eventos a los que el usuario tiene acceso (propietario o compartidos)
- */
 export const getEvents = async (req: AuthRequest, res: Response) => {
   const events = await prisma.event.findMany({
     where: {
@@ -68,9 +56,6 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
   return res.status(200).json(events)
 }
 
-/**
- * Obtiene eventos entre un rango de fechas
- */
 export const getCalendarEvents = async (req: AuthRequest, res: Response) => {
   const { start, end } = req.query
   if (!start || !end)
@@ -92,9 +77,6 @@ export const getCalendarEvents = async (req: AuthRequest, res: Response) => {
   return res.status(200).json(events)
 }
 
-/**
- * Obtiene un evento específico por ID (si el usuario es propietario o tiene acceso compartido)
- */
 export const getEventById = async (req: AuthRequest, res: Response) => {
   try {
     const eventId = parseInt(req.params.id)
@@ -120,9 +102,6 @@ export const getEventById = async (req: AuthRequest, res: Response) => {
   }
 }
 
-/**
- * Actualiza un evento (solo si el usuario tiene permiso)
- */
 export const updateEvent = async (req: AuthRequest, res: Response) => {
   const eventId = parseInt(req.params.id)
   const canEdit = await canEditEvent(req.user.userId, eventId)
@@ -155,9 +134,6 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
   return res.status(200).json(updated)
 }
 
-/**
- * Elimina un evento (solo el propietario puede hacerlo)
- */
 export const deleteEvent = async (req: AuthRequest, res: Response) => {
   const eventId = parseInt(req.params.id)
   const event = await prisma.event.findUnique({ where: { id: eventId } })
@@ -169,9 +145,7 @@ export const deleteEvent = async (req: AuthRequest, res: Response) => {
   return res.status(200).json({ message: 'Evento eliminado' })
 }
 
-/**
- * Comparte un evento con otros usuarios (solo el propietario puede compartir)
- */
+
 export const shareEvent = async (req: AuthRequest, res: Response) => {
   const eventId = parseInt(req.params.id)
   const event = await prisma.event.findUnique({ where: { id: eventId } })
@@ -183,7 +157,6 @@ export const shareEvent = async (req: AuthRequest, res: Response) => {
   if (!Array.isArray(shareItems))
     return res.status(400).json({ message: 'Debe proporcionar un array en shareItems' })
 
-  // Opcional: validar cada item con class-validator
   for (const item of shareItems) {
     const validationErrors = await validate(item)
     if (validationErrors.length > 0) return res.status(400).json(validationErrors)
@@ -212,9 +185,6 @@ export const shareEvent = async (req: AuthRequest, res: Response) => {
   return res.status(200).json({ message: 'Evento compartido correctamente' })
 }
 
-/**
- * Obtiene la lista de usuarios con los que se ha compartido un evento
- */
 export const getEventShares = async (req: AuthRequest, res: Response) => {
   const eventId = parseInt(req.params.id)
   try {
@@ -241,9 +211,6 @@ export const getEventShares = async (req: AuthRequest, res: Response) => {
   }
 }
 
-/**
- * Revoca el acceso compartido a un usuario para un evento
- */
 export const revokeShare = async (req: AuthRequest, res: Response) => {
   const eventId = parseInt(req.params.id)
   const userId = parseInt(req.params.userId)
