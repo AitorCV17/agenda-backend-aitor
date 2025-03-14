@@ -1,6 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 import authRoutes from './routes/auth.routes';
 import adminRoutes from './routes/admin.routes';
@@ -13,7 +16,7 @@ import dashboardRoutes from './routes/dashboard.routes';
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.FRONTEND_URL,
   methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
 
