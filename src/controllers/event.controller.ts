@@ -1,3 +1,4 @@
+// src/controllers/event.controller.ts
 import { Request, Response } from 'express'
 import { Recurrence, SharePermission } from '@prisma/client'
 import { validate } from 'class-validator'
@@ -44,7 +45,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       color: eventData.color,
       reminderOffset: eventData.reminderOffset || null,
       recurrence: eventData.recurrence || undefined,
-      location: eventData.location || null,  // <-- Agregado ubicación
+      location: eventData.location || null,
       userId: req.user.userId
     }
   })
@@ -53,8 +54,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
 }
 
 /**
- * Obtiene la lista de eventos a los que el usuario tiene acceso
- * (propietario o compartidos con él)
+ * Obtiene la lista de eventos a los que el usuario tiene acceso (propietario o compartidos)
  */
 export const getEvents = async (req: AuthRequest, res: Response) => {
   const events = await prisma.event.findMany({
@@ -69,7 +69,7 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
 }
 
 /**
- * Obtiene eventos entre un rango de fechas (start y end)
+ * Obtiene eventos entre un rango de fechas
  */
 export const getCalendarEvents = async (req: AuthRequest, res: Response) => {
   const { start, end } = req.query
@@ -93,8 +93,7 @@ export const getCalendarEvents = async (req: AuthRequest, res: Response) => {
 }
 
 /**
- * NUEVO: Obtiene un evento específico por ID
- * validando que el usuario sea el propietario o tenga acceso compartido.
+ * Obtiene un evento específico por ID (si el usuario es propietario o tiene acceso compartido)
  */
 export const getEventById = async (req: AuthRequest, res: Response) => {
   try {
@@ -149,7 +148,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       color: eventData.color,
       reminderOffset: eventData.reminderOffset || null,
       recurrence: eventData.recurrence || undefined,
-      location: eventData.location || null  // <-- Agregado ubicación
+      location: eventData.location || null
     }
   })
 
@@ -157,7 +156,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
 }
 
 /**
- * Elimina un evento (solo propietario)
+ * Elimina un evento (solo el propietario puede hacerlo)
  */
 export const deleteEvent = async (req: AuthRequest, res: Response) => {
   const eventId = parseInt(req.params.id)
@@ -171,7 +170,7 @@ export const deleteEvent = async (req: AuthRequest, res: Response) => {
 }
 
 /**
- * Comparte un evento con otros usuarios (solo propietario)
+ * Comparte un evento con otros usuarios (solo el propietario puede compartir)
  */
 export const shareEvent = async (req: AuthRequest, res: Response) => {
   const eventId = parseInt(req.params.id)
@@ -184,6 +183,7 @@ export const shareEvent = async (req: AuthRequest, res: Response) => {
   if (!Array.isArray(shareItems))
     return res.status(400).json({ message: 'Debe proporcionar un array en shareItems' })
 
+  // Opcional: validar cada item con class-validator
   for (const item of shareItems) {
     const validationErrors = await validate(item)
     if (validationErrors.length > 0) return res.status(400).json(validationErrors)
@@ -210,4 +210,50 @@ export const shareEvent = async (req: AuthRequest, res: Response) => {
   }
 
   return res.status(200).json({ message: 'Evento compartido correctamente' })
+}
+
+/**
+ * Obtiene la lista de usuarios con los que se ha compartido un evento
+ */
+export const getEventShares = async (req: AuthRequest, res: Response) => {
+  const eventId = parseInt(req.params.id)
+  try {
+    const shares = await prisma.eventShare.findMany({
+      where: { eventId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    })
+    const formattedShares = shares.map(share => ({
+      id: share.user.id,
+      email: share.user.email,
+      permission: share.permission,
+    }))
+    return res.status(200).json(formattedShares)
+  } catch (error) {
+    console.error("Error al obtener usuarios compartidos: ", error)
+    return res.status(500).json({ message: 'Error al obtener usuarios compartidos' })
+  }
+}
+
+/**
+ * Revoca el acceso compartido a un usuario para un evento
+ */
+export const revokeShare = async (req: AuthRequest, res: Response) => {
+  const eventId = parseInt(req.params.id)
+  const userId = parseInt(req.params.userId)
+  try {
+    await prisma.eventShare.delete({
+      where: { eventId_userId: { eventId, userId } }
+    })
+    return res.status(200).json({ message: 'Acceso revocado' })
+  } catch (error) {
+    console.error("Error al revocar acceso: ", error)
+    return res.status(500).json({ message: 'Error al revocar acceso' })
+  }
 }
