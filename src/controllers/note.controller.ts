@@ -17,6 +17,35 @@ async function canEditNote(userId: number, noteId: number): Promise<boolean> {
   return !!share
 }
 
+/**
+ * (NUEVO) Obtiene una nota por su ID, validando acceso del usuario.
+ */
+export const getNoteById = async (req: AuthRequest, res: Response) => {
+  try {
+    const noteId = parseInt(req.params.id)
+
+    // Busca la nota si el usuario es dueño o está compartida con él
+    const note = await prisma.note.findFirst({
+      where: {
+        id: noteId,
+        OR: [
+          { userId: req.user.userId },
+          { shares: { some: { userId: req.user.userId } } }
+        ]
+      }
+    })
+
+    if (!note) {
+      return res.status(404).json({ message: 'Nota no encontrada' })
+    }
+
+    return res.status(200).json(note)
+  } catch (error) {
+    console.error('Error al obtener nota por ID:', error)
+    return res.status(500).json({ message: 'Error interno del servidor' })
+  }
+}
+
 export const createNote = async (req: AuthRequest, res: Response) => {
   const noteData = new NoteDto()
   Object.assign(noteData, req.body)

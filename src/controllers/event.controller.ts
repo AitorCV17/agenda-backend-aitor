@@ -6,6 +6,11 @@ import { EventDto } from '../dto/event.dto'
 import { ShareItemDto } from '../dto/share.dto'
 import { AuthRequest } from '../middlewares/auth.middleware'
 
+/**
+ * Verifica si un usuario puede editar un evento:
+ * - Es propietario del evento
+ * - O está compartido con permiso EDIT
+ */
 async function canEditEvent(userId: number, eventId: number): Promise<boolean> {
   const event = await prisma.event.findUnique({ where: { id: eventId } })
   if (!event) return false
@@ -17,6 +22,9 @@ async function canEditEvent(userId: number, eventId: number): Promise<boolean> {
   return !!share
 }
 
+/**
+ * Crea un evento nuevo
+ */
 export const createEvent = async (req: AuthRequest, res: Response) => {
   const eventData = new EventDto()
   Object.assign(eventData, req.body)
@@ -43,6 +51,10 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
   return res.status(201).json(event)
 }
 
+/**
+ * Obtiene la lista de eventos a los que el usuario tiene acceso
+ * (propietario o compartidos con él)
+ */
 export const getEvents = async (req: AuthRequest, res: Response) => {
   const events = await prisma.event.findMany({
     where: {
@@ -55,6 +67,9 @@ export const getEvents = async (req: AuthRequest, res: Response) => {
   return res.status(200).json(events)
 }
 
+/**
+ * Obtiene eventos entre un rango de fechas (start y end)
+ */
 export const getCalendarEvents = async (req: AuthRequest, res: Response) => {
   const { start, end } = req.query
   if (!start || !end)
@@ -76,6 +91,38 @@ export const getCalendarEvents = async (req: AuthRequest, res: Response) => {
   return res.status(200).json(events)
 }
 
+/**
+ * NUEVO: Obtiene un evento específico por ID
+ * validando que el usuario sea el propietario o tenga acceso compartido.
+ */
+export const getEventById = async (req: AuthRequest, res: Response) => {
+  try {
+    const eventId = parseInt(req.params.id)
+
+    const event = await prisma.event.findFirst({
+      where: {
+        id: eventId,
+        OR: [
+          { userId: req.user.userId },
+          { shares: { some: { userId: req.user.userId } } }
+        ]
+      }
+    })
+
+    if (!event) {
+      return res.status(404).json({ message: 'Evento no encontrado' })
+    }
+
+    return res.json(event)
+  } catch (error) {
+    console.error('Error al obtener evento por ID:', error)
+    return res.status(500).json({ message: 'Error interno del servidor' })
+  }
+}
+
+/**
+ * Actualiza un evento (solo si el usuario tiene permiso)
+ */
 export const updateEvent = async (req: AuthRequest, res: Response) => {
   const eventId = parseInt(req.params.id)
   const canEdit = await canEditEvent(req.user.userId, eventId)
@@ -107,6 +154,9 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
   return res.status(200).json(updated)
 }
 
+/**
+ * Elimina un evento (solo propietario)
+ */
 export const deleteEvent = async (req: AuthRequest, res: Response) => {
   const eventId = parseInt(req.params.id)
   const event = await prisma.event.findUnique({ where: { id: eventId } })
@@ -118,6 +168,9 @@ export const deleteEvent = async (req: AuthRequest, res: Response) => {
   return res.status(200).json({ message: 'Evento eliminado' })
 }
 
+/**
+ * Comparte un evento con otros usuarios (solo propietario)
+ */
 export const shareEvent = async (req: AuthRequest, res: Response) => {
   const eventId = parseInt(req.params.id)
   const event = await prisma.event.findUnique({ where: { id: eventId } })

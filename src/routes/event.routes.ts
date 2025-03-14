@@ -6,17 +6,32 @@ import {
   getCalendarEvents,
   updateEvent,
   deleteEvent,
-  shareEvent
+  shareEvent,
+  getEventById  // <-- IMPORTAMOS la nueva función
 } from '../controllers/event.controller'
 
 const router = Router()
 router.use(authenticateJWT)
 
+// Crear evento
 router.post('/', createEvent)
+
+// Listar eventos
 router.get('/', getEvents)
+
+// Obtener eventos para calendario
 router.get('/calendar', getCalendarEvents)
+
+// NUEVA RUTA: Obtener un evento por ID
+router.get('/:id', getEventById)
+
+// Actualizar evento
 router.put('/:id', updateEvent)
+
+// Eliminar evento
 router.delete('/:id', deleteEvent)
+
+// Compartir evento
 router.post('/:id/share', shareEvent)
 
 export default router
