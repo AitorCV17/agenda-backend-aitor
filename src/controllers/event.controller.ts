@@ -8,9 +8,12 @@ import { AuthRequest } from '../middlewares/auth.middleware';
 const prisma = new PrismaClient();
 
 async function canEditEvent(userId: number, eventId: number): Promise<boolean> {
+  // 1) Es el dueño del evento
   const event = await prisma.event.findUnique({ where: { id: eventId } });
   if (!event) return false;
   if (event.userId === userId) return true;
+
+  // 2) Está compartido con permiso EDIT
   const share = await prisma.eventShare.findFirst({
     where: { eventId, userId, permission: SharePermission.EDIT }
   });
@@ -20,10 +23,13 @@ async function canEditEvent(userId: number, eventId: number): Promise<boolean> {
 export const createEvent = async (req: AuthRequest, res: Response) => {
   const eventData = new EventDto();
   Object.assign(eventData, req.body);
+
   const errors = await validate(eventData);
   if (errors.length > 0) return res.status(400).json(errors);
+
   if (new Date(eventData.startTime) >= new Date(eventData.endTime))
     return res.status(400).json({ message: 'endTime debe ser posterior a startTime' });
+
   const event = await prisma.event.create({
     data: {
       title: eventData.title,
@@ -36,6 +42,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       userId: req.user.userId
     }
   });
+
   return res.status(201).json(event);
 };
 
@@ -55,8 +62,10 @@ export const getCalendarEvents = async (req: AuthRequest, res: Response) => {
   const { start, end } = req.query;
   if (!start || !end)
     return res.status(400).json({ message: 'Debe proporcionar start y end en formato ISO' });
+
   const startDate = new Date(start as string);
   const endDate = new Date(end as string);
+
   const events = await prisma.event.findMany({
     where: {
       OR: [
@@ -73,13 +82,18 @@ export const getCalendarEvents = async (req: AuthRequest, res: Response) => {
 export const updateEvent = async (req: AuthRequest, res: Response) => {
   const eventId = parseInt(req.params.id);
   const canEdit = await canEditEvent(req.user.userId, eventId);
-  if (!canEdit) return res.status(403).json({ message: 'No tienes permiso para editar este evento' });
+  if (!canEdit)
+    return res.status(403).json({ message: 'No tienes permiso para editar este evento' });
+
   const eventData = new EventDto();
   Object.assign(eventData, req.body);
+
   const errors = await validate(eventData);
   if (errors.length > 0) return res.status(400).json(errors);
+
   if (new Date(eventData.startTime) >= new Date(eventData.endTime))
     return res.status(400).json({ message: 'endTime debe ser posterior a startTime' });
+
   const updated = await prisma.event.update({
     where: { id: eventId },
     data: {
@@ -92,6 +106,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       recurrence: eventData.recurrence || undefined
     }
   });
+
   return res.status(200).json(updated);
 };
 
@@ -101,6 +116,7 @@ export const deleteEvent = async (req: AuthRequest, res: Response) => {
   if (!event) return res.status(404).json({ message: 'Evento no encontrado' });
   if (event.userId !== req.user.userId)
     return res.status(403).json({ message: 'No tienes permiso para eliminar este evento' });
+
   await prisma.event.delete({ where: { id: eventId } });
   return res.status(200).json({ message: 'Evento eliminado' });
 };
@@ -111,21 +127,37 @@ export const shareEvent = async (req: AuthRequest, res: Response) => {
   if (!event) return res.status(404).json({ message: 'Evento no encontrado' });
   if (event.userId !== req.user.userId)
     return res.status(403).json({ message: 'No tienes permiso para compartir este evento' });
+
   const shareItems: ShareItemDto[] = req.body.shareItems;
   if (!Array.isArray(shareItems))
     return res.status(400).json({ message: 'Debe proporcionar un array en shareItems' });
+
+  // Validar cada shareItem
   for (const item of shareItems) {
     const validationErrors = await validate(item);
     if (validationErrors.length > 0) return res.status(400).json(validationErrors);
   }
-  // Upsert en EventShare utilizando la clave compuesta (con nombre "eventId_userId")
+
+  // Realizar upsert con la clave compuesta "eventId_userId"
   for (const item of shareItems) {
-    // Se asume que el campo compuesto se llama "eventId_userId"
+    const user = await prisma.user.findUnique({ where: { email: item.email } });
+    if (!user) continue;
+
     await prisma.eventShare.upsert({
-      where: { eventId_userId: { eventId: eventId, userId: item.email && (await prisma.user.findUnique({ where: { email: item.email } }))?.id || 0 } },
+      where: {
+        eventId_userId: {
+          eventId: eventId,
+          userId: user.id
+        }
+      },
       update: { permission: item.permission },
-      create: { eventId: eventId, userId: (await prisma.user.findUnique({ where: { email: item.email } }))!.id, permission: item.permission }
+      create: {
+        eventId: eventId,
+        userId: user.id,
+        permission: item.permission
+      }
     });
   }
+
   return res.status(200).json({ message: 'Evento compartido correctamente' });
 };

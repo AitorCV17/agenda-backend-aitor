@@ -34,13 +34,18 @@ export const createUser = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
   const userId = parseInt(req.params.id);
   const { name, email, password, role } = req.body;
+
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
   const dataToUpdate: any = {};
   if (name) dataToUpdate.name = name;
   if (email) dataToUpdate.email = email;
   if (role) dataToUpdate.role = role === 'ADMIN' ? Role.ADMIN : Role.USER;
-  if (password) dataToUpdate.password = await hashPassword(password);
+  if (password) {
+    dataToUpdate.password = await hashPassword(password);
+  }
+
   await prisma.user.update({ where: { id: userId }, data: dataToUpdate });
   res.status(200).json({ message: 'Usuario actualizado' });
 };

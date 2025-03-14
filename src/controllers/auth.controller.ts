@@ -16,9 +16,7 @@ export const register = async (req: Request, res: Response) => {
   const errors = await validate(registerData);
   if (errors.length > 0) return res.status(400).json(errors);
 
-  const existingUser = await prisma.user.findUnique({
-    where: { email: registerData.email }
-  });
+  const existingUser = await prisma.user.findUnique({ where: { email: registerData.email } });
   if (existingUser) return res.status(400).json({ message: 'El usuario ya existe' });
 
   const hashedPassword = await hashPassword(registerData.password);
@@ -41,9 +39,7 @@ export const login = async (req: Request, res: Response) => {
   const errors = await validate(loginData);
   if (errors.length > 0) return res.status(400).json(errors);
 
-  const user = await prisma.user.findUnique({
-    where: { email: loginData.email }
-  });
+  const user = await prisma.user.findUnique({ where: { email: loginData.email } });
   if (!user) return res.status(400).json({ message: 'Credenciales inválidas' });
 
   const isPasswordValid = await comparePassword(loginData.password, user.password);

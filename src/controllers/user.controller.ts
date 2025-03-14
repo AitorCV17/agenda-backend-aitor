@@ -19,12 +19,18 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
   const profileData = new UpdateProfileDto();
   profileData.name = req.body.name;
   profileData.email = req.body.email;
+
   const errors = await validate(profileData);
   if (errors.length > 0) return res.status(400).json(errors);
+
   const updatedUser = await prisma.user.update({
     where: { id: req.user.userId },
-    data: { name: profileData.name, email: profileData.email }
+    data: {
+      name: profileData.name,
+      email: profileData.email
+    }
   });
+
   res.status(200).json({ message: 'Perfil actualizado', user: updatedUser });
 };
 
@@ -32,13 +38,25 @@ export const updatePassword = async (req: AuthRequest, res: Response) => {
   const passwordData = new UpdatePasswordDto();
   passwordData.currentPassword = req.body.currentPassword;
   passwordData.newPassword = req.body.newPassword;
+
   const errors = await validate(passwordData);
   if (errors.length > 0) return res.status(400).json(errors);
+
   const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
-  if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+  if (!user) {
+    return res.status(404).json({ message: 'Usuario no encontrado' });
+  }
+
   const isValid = await comparePassword(passwordData.currentPassword, user.password);
-  if (!isValid) return res.status(400).json({ message: 'La contraseña actual es incorrecta' });
+  if (!isValid) {
+    return res.status(400).json({ message: 'La contraseña actual es incorrecta' });
+  }
+
   const newHashed = await hashPassword(passwordData.newPassword);
-  await prisma.user.update({ where: { id: req.user.userId }, data: { password: newHashed } });
+  await prisma.user.update({
+    where: { id: req.user.userId },
+    data: { password: newHashed }
+  });
+
   res.status(200).json({ message: 'Contraseña actualizada' });
 };

@@ -10,7 +10,6 @@ import {
 } from '../controllers/agenda.controller';
 
 const router = Router();
-
 router.use(authenticateJWT);
 
 router.post('/', createEvent);

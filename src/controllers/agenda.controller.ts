@@ -54,8 +54,10 @@ export const getCalendarEvents = async (req: AuthRequest, res: Response) => {
   const { start, end } = req.query;
   if (!start || !end)
     return res.status(400).json({ message: 'Debe proporcionar start y end en formato ISO' });
+
   const startDate = new Date(start as string);
   const endDate = new Date(end as string);
+
   const events = await prisma.event.findMany({
     where: {
       OR: [
@@ -66,6 +68,7 @@ export const getCalendarEvents = async (req: AuthRequest, res: Response) => {
       endTime: { gte: startDate }
     }
   });
+
   return res.status(200).json(events);
 };
 
@@ -86,7 +89,6 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
   if (new Date(eventData.startTime) >= new Date(eventData.endTime))
     return res.status(400).json({ message: 'La fecha/hora de fin debe ser posterior a la de inicio' });
 
-  // NOTA: No actualizamos compartición (shares) en este endpoint
   const updated = await prisma.event.updateMany({
     where: { id: eventId, userId: req.user.userId },
     data: {
@@ -134,7 +136,7 @@ export const shareEvent = async (req: AuthRequest, res: Response) => {
   if (!event)
     return res.status(404).json({ message: 'Evento no encontrado o no es propietario' });
 
-  // Usamos upsert en EventShare usando la clave compuesta
+  // upsert en EventShare con permiso READ por defecto
   for (const email of userEmails) {
     const user = users.find(u => u.email === email);
     if (!user) continue;

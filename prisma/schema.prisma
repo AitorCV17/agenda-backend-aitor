@@ -32,6 +32,7 @@ model User {
   name            String
   role            Role             @default(USER)
   createdAt       DateTime         @default(now())
+
   events          Event[]
   notes           Note[]
   taskLists       TaskList[]

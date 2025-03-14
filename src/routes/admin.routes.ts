@@ -6,8 +6,10 @@ import { getAllUsers, createUser, updateUser, deleteUser } from '../controllers/
 const router = Router();
 router.use(authenticateJWT);
 router.use(authorizeRoles('ADMIN'));
+
 router.get('/users', getAllUsers);
 router.post('/users', createUser);
 router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
+
 export default router;

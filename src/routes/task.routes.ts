@@ -1,6 +1,15 @@
 import { Router } from 'express';
 import { authenticateJWT } from '../middlewares/auth.middleware';
-import { createTaskList, getTaskLists, updateTaskList, deleteTaskList, shareTaskList, createTask, updateTask, deleteTask } from '../controllers/task.controller';
+import {
+  createTaskList,
+  getTaskLists,
+  updateTaskList,
+  deleteTaskList,
+  shareTaskList,
+  createTask,
+  updateTask,
+  deleteTask
+} from '../controllers/task.controller';
 
 const router = Router();
 router.use(authenticateJWT);
@@ -16,4 +25,5 @@ router.post('/lists/:id/share', shareTaskList);
 router.post('/lists/:listId/tasks', createTask);
 router.put('/lists/:listId/tasks/:taskId', updateTask);
 router.delete('/lists/:listId/tasks/:taskId', deleteTask);
+
 export default router;
