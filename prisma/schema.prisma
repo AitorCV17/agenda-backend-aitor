@@ -1,0 +1,136 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USUARIO
+  ADMIN
+}
+
+enum SharePermission {
+  READ
+  EDIT
+}
+
+enum Recurrence {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USUARIO)
+  createdAt DateTime @default(now())
+
+  events    Event[]
+  notes     Note[]
+  taskLists TaskList[]
+
+  eventShares    EventShare[]
+  noteShares     NoteShare[]
+  taskListShares TaskListShare[]
+
+  eventSharesSent    EventShare[]    @relation("EventShareSharedBy")
+  noteSharesSent     NoteShare[]     @relation("NoteShareSharedBy")
+  taskListSharesSent TaskListShare[] @relation("TaskListShareSharedBy")
+}
+
+model Event {
+  id             Int          @id @default(autoincrement())
+  title          String
+  description    String?
+  startTime      DateTime
+  endTime        DateTime
+  color          String?
+  reminderOffset Int?
+  recurrence     Recurrence?  @default(NONE)
+  location       String?
+  createdAt      DateTime     @default(now())
+  userId         Int
+  user           User         @relation(fields: [userId], references: [id])
+  shares         EventShare[]
+}
+
+model EventShare {
+  id         Int             @id @default(autoincrement())
+  eventId    Int
+  userId     Int
+  permission SharePermission
+  sharedById Int
+  sharedBy   User            @relation("EventShareSharedBy", fields: [sharedById], references: [id])
+  event      Event           @relation(fields: [eventId], references: [id])
+  user       User            @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+}
+
+model Note {
+  id        Int         @id @default(autoincrement())
+  title     String
+  content   String?
+  pinned    Boolean     @default(false)
+  color     String?
+  userId    Int
+  user      User        @relation(fields: [userId], references: [id])
+  createdAt DateTime    @default(now())
+  shares    NoteShare[]
+}
+
+model NoteShare {
+  id         Int             @id @default(autoincrement())
+  noteId     Int
+  userId     Int
+  permission SharePermission
+  sharedById Int
+  sharedBy   User            @relation("NoteShareSharedBy", fields: [sharedById], references: [id])
+  note       Note            @relation(fields: [noteId], references: [id])
+  user       User            @relation(fields: [userId], references: [id])
+
+  @@unique([noteId, userId])
+}
+
+model TaskList {
+  id        Int             @id @default(autoincrement())
+  name      String
+  pinned    Boolean         @default(false)
+  userId    Int
+  user      User            @relation(fields: [userId], references: [id])
+  createdAt DateTime        @default(now())
+  tasks     Task[]
+  shares    TaskListShare[]
+}
+
+model TaskListShare {
+  id         Int             @id @default(autoincrement())
+  taskListId Int
+  userId     Int
+  permission SharePermission
+  sharedById Int
+  sharedBy   User            @relation("TaskListShareSharedBy", fields: [sharedById], references: [id])
+  taskList   TaskList        @relation(fields: [taskListId], references: [id])
+  user       User            @relation(fields: [userId], references: [id])
+
+  @@unique([taskListId, userId])
+}
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  completed   Boolean  @default(false)
+  starred     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  listId      Int
+  list        TaskList @relation(fields: [listId], references: [id])
+}
