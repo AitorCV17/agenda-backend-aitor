@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN');
+CREATE TYPE "Role" AS ENUM ('USUARIO', 'ADMIN');
 
 -- CreateEnum
 CREATE TYPE "SharePermission" AS ENUM ('READ', 'EDIT');
@@ -13,7 +13,7 @@ CREATE TABLE "User" (
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "role" "Role" NOT NULL DEFAULT 'USER',
+    "role" "Role" NOT NULL DEFAULT 'USUARIO',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
@@ -29,6 +29,7 @@ CREATE TABLE "Event" (
     "color" TEXT,
     "reminderOffset" INTEGER,
     "recurrence" "Recurrence" DEFAULT 'NONE',
+    "location" TEXT,
     "userId" INTEGER NOT NULL,
 
     CONSTRAINT "Event_pkey" PRIMARY KEY ("id")

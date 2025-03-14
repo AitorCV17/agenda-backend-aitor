@@ -8,7 +8,7 @@ generator client {
 }
 
 enum Role {
-  USER
+  USUARIO
   ADMIN
 }
 
@@ -30,7 +30,7 @@ model User {
   email           String           @unique
   password        String
   name            String
-  role            Role             @default(USER)
+  role            Role             @default(USUARIO)
   createdAt       DateTime         @default(now())
 
   events          Event[]
@@ -51,7 +51,7 @@ model Event {
   color           String?
   reminderOffset  Int?
   recurrence      Recurrence?      @default(NONE)
-  location        String?          // <-- NUEVO CAMPO
+  location        String?
   userId          Int
   user            User             @relation(fields: [userId], references: [id])
   shares          EventShare[]
