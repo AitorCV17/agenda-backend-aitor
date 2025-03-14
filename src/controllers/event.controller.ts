@@ -33,7 +33,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
   if (errors.length > 0) return res.status(400).json(errors)
 
   if (new Date(eventData.startTime) >= new Date(eventData.endTime))
-    return res.status(400).json({ message: 'endTime debe ser posterior a startTime' })
+    return res.status(400).json({ message: 'La fecha/hora de fin debe ser posterior a la de inicio' })
 
   const event = await prisma.event.create({
     data: {
@@ -44,6 +44,7 @@ export const createEvent = async (req: AuthRequest, res: Response) => {
       color: eventData.color,
       reminderOffset: eventData.reminderOffset || null,
       recurrence: eventData.recurrence || undefined,
+      location: eventData.location || null,  // <-- Agregado ubicación
       userId: req.user.userId
     }
   })
@@ -136,7 +137,7 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
   if (errors.length > 0) return res.status(400).json(errors)
 
   if (new Date(eventData.startTime) >= new Date(eventData.endTime))
-    return res.status(400).json({ message: 'endTime debe ser posterior a startTime' })
+    return res.status(400).json({ message: 'La fecha/hora de fin debe ser posterior a la de inicio' })
 
   const updated = await prisma.event.update({
     where: { id: eventId },
@@ -147,7 +148,8 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
       endTime: new Date(eventData.endTime),
       color: eventData.color,
       reminderOffset: eventData.reminderOffset || null,
-      recurrence: eventData.recurrence || undefined
+      recurrence: eventData.recurrence || undefined,
+      location: eventData.location || null  // <-- Agregado ubicación
     }
   })
 

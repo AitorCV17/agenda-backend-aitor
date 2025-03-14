@@ -31,4 +31,7 @@ export class EventDto {
   @IsOptional()
   @IsIn(['NONE', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'])
   recurrence?: 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
+  
+  @IsOptional()
+  location?: string
 }

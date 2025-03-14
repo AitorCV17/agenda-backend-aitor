@@ -51,6 +51,7 @@ model Event {
   color           String?
   reminderOffset  Int?
   recurrence      Recurrence?      @default(NONE)
+  location        String?          // <-- NUEVO CAMPO
   userId          Int
   user            User             @relation(fields: [userId], references: [id])
   shares          EventShare[]
