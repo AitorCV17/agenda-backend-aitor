@@ -1,5 +1,5 @@
-import { Router } from 'express';
-import { authenticateJWT } from '../middlewares/auth.middleware';
+import { Router } from 'express'
+import { authenticateJWT } from '../middlewares/auth.middleware'
 import {
   createTaskList,
   getTaskLists,
@@ -9,21 +9,21 @@ import {
   createTask,
   updateTask,
   deleteTask
-} from '../controllers/task.controller';
+} from '../controllers/task.controller'
 
-const router = Router();
-router.use(authenticateJWT);
+const router = Router()
+router.use(authenticateJWT)
 
 // Listas de tareas
-router.post('/lists', createTaskList);
-router.get('/lists', getTaskLists);
-router.put('/lists/:id', updateTaskList);
-router.delete('/lists/:id', deleteTaskList);
-router.post('/lists/:id/share', shareTaskList);
+router.post('/lists', createTaskList)
+router.get('/lists', getTaskLists)
+router.put('/lists/:id', updateTaskList)
+router.delete('/lists/:id', deleteTaskList)
+router.post('/lists/:id/share', shareTaskList)
 
 // Tareas individuales
-router.post('/lists/:listId/tasks', createTask);
-router.put('/lists/:listId/tasks/:taskId', updateTask);
-router.delete('/lists/:listId/tasks/:taskId', deleteTask);
+router.post('/lists/:listId/tasks', createTask)
+router.put('/lists/:listId/tasks/:taskId', updateTask)
+router.delete('/lists/:listId/tasks/:taskId', deleteTask)
 
-export default router;
+export default router

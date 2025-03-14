@@ -1,4 +1,4 @@
-import { createLogger, format, transports } from 'winston';
+import { createLogger, format, transports } from 'winston'
 
 export const logger = createLogger({
   level: 'info',
@@ -10,4 +10,4 @@ export const logger = createLogger({
     new transports.Console(),
     new transports.File({ filename: 'logs/audit.log' })
   ]
-});
+})

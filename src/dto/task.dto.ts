@@ -1,23 +1,23 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator'
 
 export class TaskListDto {
   @IsNotEmpty()
-  name!: string;
+  name!: string
 
   @IsOptional()
-  pinned?: boolean;
+  pinned?: boolean
 }
 
 export class TaskDto {
   @IsNotEmpty()
-  title!: string;
+  title!: string
 
   @IsOptional()
-  description?: string;
+  description?: string
 
   @IsOptional()
-  completed?: boolean;
+  completed?: boolean
 
   @IsOptional()
-  starred?: boolean;
+  starred?: boolean
 }

@@ -1,15 +1,15 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional } from 'class-validator'
 
 export class NoteDto {
   @IsNotEmpty()
-  title!: string;
+  title!: string
 
   @IsOptional()
-  content?: string;
+  content?: string
 
   @IsOptional()
-  color?: string;
+  color?: string
 
   @IsOptional()
-  pinned?: boolean;
+  pinned?: boolean
 }

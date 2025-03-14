@@ -5,30 +5,30 @@ import {
   IsInt,
   IsIn,
   Min
-} from 'class-validator';
+} from 'class-validator'
 
 export class EventDto {
   @IsNotEmpty()
-  title!: string;
+  title!: string
 
   @IsOptional()
-  description?: string;
+  description?: string
 
   @IsDateString()
-  startTime!: string;
+  startTime!: string
 
   @IsDateString()
-  endTime!: string;
+  endTime!: string
 
   @IsOptional()
-  color?: string;
+  color?: string
 
   @IsOptional()
   @IsInt()
   @Min(0)
-  reminderOffset?: number;
+  reminderOffset?: number
 
   @IsOptional()
   @IsIn(['NONE', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'])
-  recurrence?: 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  recurrence?: 'NONE' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
 }
