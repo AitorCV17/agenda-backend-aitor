@@ -1,17 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-import authRoutes from './routes/auth.routes';
-import adminRoutes from './routes/admin.routes';
-import userRoutes from './routes/user.routes';
-import eventRoutes from './routes/event.routes';
-import noteRoutes from './routes/note.routes';
-import taskRoutes from './routes/task.routes';
-import dashboardRoutes from './routes/dashboard.routes';
+// No es necesario llamar a dotenv.config() aquí ya que se ha hecho en index.ts
 
 const app = express();
 
@@ -22,7 +13,16 @@ app.use(cors({
 
 app.use(bodyParser.json());
 
-// Rutas
+// Importar rutas
+import authRoutes from './routes/auth.routes';
+import adminRoutes from './routes/admin.routes';
+import userRoutes from './routes/user.routes';
+import eventRoutes from './routes/event.routes';
+import noteRoutes from './routes/note.routes';
+import taskRoutes from './routes/task.routes';
+import dashboardRoutes from './routes/dashboard.routes';
+
+// Configurar rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);

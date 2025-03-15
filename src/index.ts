@@ -1,4 +1,10 @@
 import 'reflect-metadata';
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Cargar variables de entorno desde el directorio raíz
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
 import app from './app';
 import './jobs/reminders.job';
 import { logger } from './utils/logger';
