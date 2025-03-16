@@ -1,7 +1,8 @@
 import { Request, Response } from 'express'
 import { validate } from 'class-validator'
 import prisma from '../utils/prisma'
-import jwt from 'jsonwebtoken'
+import jwt, { SignOptions } from 'jsonwebtoken'
+import ms from 'ms'
 import { hashPassword, comparePassword } from '../utils/hash'
 import { RegisterDto, LoginDto } from '../dto/user.dto'
 
@@ -43,10 +44,18 @@ export const login = async (req: Request, res: Response) => {
   const isPasswordValid = await comparePassword(loginData.password, user.password)
   if (!isPasswordValid) return res.status(400).json({ message: 'Credenciales inválidas' })
 
+  const expiresInValue = process.env.JWT_EXPIRES_IN || '1h'
+  const expiresInMilliseconds = (ms as (val: string) => number)(expiresInValue)
+  const expiresInSeconds = Math.floor(expiresInMilliseconds / 1000)
+
+  const signOptions: SignOptions = {
+    expiresIn: expiresInSeconds
+  }
+
   const token = jwt.sign(
     { userId: user.id, email: user.email, role: user.role },
     process.env.JWT_SECRET as string,
-    { expiresIn: '2h' }
+    signOptions
   )
 
   return res.status(200).json({
